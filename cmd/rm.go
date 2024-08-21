@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -19,46 +20,62 @@ func rmHandler() {
 
 	// Process if there are args
 	if len(args) > 0 {
-		// TODO: Parse rm args
-
-		// Check file type
-		fi, err := os.Stat(args[0])
+		// Get config
+		cfg, err := config.GetConfig()
 		if err != nil {
-			fmt.Printf("error getting the file stat: %v\n", err)
+			fmt.Printf("error getting the config data: %v\n", err)
 			return
 		}
 
-		// Check and back file or directories
-		if fi.IsDir() {
-			// TODO: Backup dir
-		} else {
-			// Get config
-			cfg, err := config.GetConfig()
+		// Create a dir with current timestamp
+		dirToMove, err := createDirWithTimestamp(cfg.BackupsPath)
+		if err != nil {
+			fmt.Printf("error creating dir with timestamp: %v\n", err)
+			return
+		}
+
+		// Parse rm args
+		for ind := range args {
+			// TODO: Parse rm flags
+			if strings.HasPrefix(args[ind], "-") {
+				fmt.Printf("rm: unrecognized option '%s'\n", args[ind])
+				return
+			}
+
+			// Check file type
+			fi, err := os.Stat(args[ind])
 			if err != nil {
-				fmt.Printf("error getting the config data: %v\n", err)
+				fmt.Printf("error getting the file stat: %v\n", err)
 				return
 			}
 
-			// Create a dir with current timestamp
-			dirToMove := cfg.BackupsPath + string(filepath.Separator) + generateUniqueTimestamp()
-			if err := os.Mkdir(dirToMove, os.ModeDir|0755); err != nil {
-				fmt.Printf("error getting the config data: %v\n", err)
-				return
-			}
+			// Check and backup files or directories
+			if fi.IsDir() {
+				// TODO: Backup dir
+			} else {
+				// Move file to the timestamp dir
+				dstPath := dirToMove + string(filepath.Separator) + args[ind]
+				if err := util.MoveFile(args[ind], dstPath); err != nil {
+					fmt.Printf("error moving %s to backups dir: %v\n", args[ind], err)
+					return
+				}
 
-			// Move file to the timestamp dir
-			dstPath := dirToMove + string(filepath.Separator) + args[0]
-			if err := util.MoveFile(args[0], dstPath); err != nil {
-				fmt.Printf("error moving %s to backups dir: %v\n", args[0], err)
-				return
+				// TODO: Track info in DB in case of success
 			}
-
-			// TODO: Undo backup in case of failures
-			// TODO: Track info in DB in case of success
 		}
 	} else {
 		println("rm: missing operand")
 	}
+}
+
+// createDirWithTimestamp creates a directory with current timestamp
+func createDirWithTimestamp(backupsPath string) (dirToMove string, err error) {
+	dirToMove = backupsPath + string(filepath.Separator) + generateUniqueTimestamp()
+	if err = os.Mkdir(dirToMove, os.ModeDir|0755); err != nil {
+		return "", err
+	}
+
+	return dirToMove, nil
 }
 
 var mu sync.Mutex
