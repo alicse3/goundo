@@ -28,6 +28,30 @@ type Config struct {
 	BackupsPath string `json:"backupsPath"`
 }
 
+// GetConfig returns the app config.
+func GetConfig() (*Config, error) {
+	// Get app path
+	appPath, err := getAppPath()
+	if err != nil {
+		return nil, &util.AppErr{Message: "error getting the app path", Err: err}
+	}
+
+	// Read config data
+	configFilepath := appPath + string(filepath.Separator) + configFilename
+	data, err := os.ReadFile(configFilepath)
+	if err != nil {
+		return nil, &util.AppErr{Message: "error reading the config file", Err: err}
+	}
+
+	// Unmarshal config data
+	var config Config
+	if err := json.Unmarshal(data, &config); err != nil {
+		return nil, &util.AppErr{Message: "error unmarshalling config data", Err: err}
+	}
+
+	return &config, nil
+}
+
 // InitSetup initializes the application setup.
 // It creates the necessary directories and sets up the default configuration.
 func InitSetup() {
