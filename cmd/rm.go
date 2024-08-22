@@ -14,6 +14,11 @@ import (
 	"github.com/alicse3/goundo/internal/util"
 )
 
+const (
+	TypeFile      = "FILE"
+	TypeDirectory = "DIRECTORY"
+)
+
 // rmHandler handles the rm commands.
 func rmHandler() {
 	// Get rm args
@@ -63,12 +68,13 @@ func rmHandler() {
 				// TODO: Backup dir
 			} else {
 				// Move file to the timestamp dir
-				dstPath := dirToMove + string(filepath.Separator) + args[ind]
+				dstPath := dirToMove + string(filepath.Separator) + filepath.Base(args[ind])
 				if err := util.MoveFile(args[ind], dstPath); err != nil {
 					fmt.Printf("error moving %s to backups dir: %v\n", args[ind], err)
 					return
 				}
 
+				// Get absolute path
 				absPath, err := filepath.Abs(args[ind])
 				if err != nil {
 					fmt.Printf("error getting the absolute file path: %v\n", err)
@@ -76,7 +82,7 @@ func rmHandler() {
 				}
 
 				// Track info in DB
-				if err := db.Insert(absPath, dstPath); err != nil {
+				if err := db.Insert(absPath, dstPath, TypeFile); err != nil {
 					fmt.Printf("error inserting file info in db: %v\n", err)
 					return
 				}
