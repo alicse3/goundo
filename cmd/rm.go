@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/alicse3/goundo/internal/config"
+	"github.com/alicse3/goundo/internal/database"
 	"github.com/alicse3/goundo/internal/util"
 )
 
@@ -27,10 +28,11 @@ func rmHandler() {
 			return
 		}
 
-		// Create a dir with current timestamp
-		dirToMove, err := createDirWithTimestamp(cfg.BackupsPath)
+		// Initialize the DB
+		dbPath := cfg.AppPath + string(filepath.Separator) + "backups.db"
+		db, err := database.NewDBHandler(dbPath)
 		if err != nil {
-			fmt.Printf("error creating dir with timestamp: %v\n", err)
+			fmt.Printf("error initializing the db: %v\n", err)
 			return
 		}
 
@@ -49,6 +51,13 @@ func rmHandler() {
 				return
 			}
 
+			// Create a dir with current timestamp
+			dirToMove, err := createDirWithTimestamp(cfg.BackupsPath)
+			if err != nil {
+				fmt.Printf("error creating dir with timestamp: %v\n", err)
+				return
+			}
+
 			// Check and backup files or directories
 			if fi.IsDir() {
 				// TODO: Backup dir
@@ -60,7 +69,17 @@ func rmHandler() {
 					return
 				}
 
-				// TODO: Track info in DB in case of success
+				absPath, err := filepath.Abs(args[ind])
+				if err != nil {
+					fmt.Printf("error getting the absolute file path: %v\n", err)
+					return
+				}
+
+				// Track info in DB
+				if err := db.Insert(absPath, dstPath); err != nil {
+					fmt.Printf("error inserting file info in db: %v\n", err)
+					return
+				}
 			}
 		}
 	} else {

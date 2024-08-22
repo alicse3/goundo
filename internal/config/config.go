@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -24,6 +25,9 @@ const (
 
 // Config holds application configuration settings.
 type Config struct {
+	// AppPath is the path where the application configuration is stored.
+	AppPath string `json:"appPath"`
+
 	// BackupsPath is the path where backups will be stored.
 	BackupsPath string `json:"backupsPath"`
 }
@@ -58,7 +62,13 @@ func InitSetup() {
 	// Get app path
 	appPath, err := getAppPath()
 	if err != nil {
-		println("error getting the app path:", err)
+		fmt.Printf("error getting the app path: %v\n", err)
+		return
+	}
+
+	// Create .goundo directory if it doesn't exist
+	if err := createDir(appPath); err != nil {
+		fmt.Printf("error creating the .goundo dir: %v\n", err)
 		return
 	}
 
@@ -66,36 +76,30 @@ func InitSetup() {
 	setupLogPath := appPath + string(filepath.Separator) + setupLogFilename
 	logger, err := util.NewLogger("DEBUG", setupLogPath)
 	if err != nil {
-		println("error initializing the logger:", err)
+		fmt.Printf("error initializing the logger: %v\n", err)
 		return
 	}
 
 	logger.Debug("app path is: %s", appPath)
 
-	// Create .goundo directory if it doesn't exist
-	if err := createDir(logger, appPath); err != nil {
-		logger.Error("error creating the .goundo dir: %v", err)
+	// Load default config
+	defCfg, err := loadDefaultConfig(logger)
+	if err != nil {
+		logger.Error("error loading default config: %v", err)
 		return
-	} else {
-		// Load default config
-		defCfg, err := loadDefaultConfig(logger)
-		if err != nil {
-			logger.Error("error loading default config: %v", err)
-			return
-		}
-		logger.Info("default config is loaded")
-
-		// Setup default config
-		if err := setupDefaultConfig(logger, defCfg); err != nil {
-			logger.Error("error setting up default config: %v", err)
-			return
-		}
-		logger.Info("config file setup is done")
 	}
+	logger.Info("default config is loaded")
+
+	// Setup default config
+	if err := setupDefaultConfig(logger, defCfg); err != nil {
+		logger.Error("error setting up default config: %v", err)
+		return
+	}
+	logger.Info("config file setup is done")
 
 	// Create backups directory if it doesn't exist
 	backupPath := appPath + string(filepath.Separator) + backupsBaseDirname
-	if err := createDir(logger, backupPath); err != nil {
+	if err := createDir(backupPath); err != nil {
 		logger.Error("error creating the backups dir: %v", err)
 		return
 	}
@@ -103,21 +107,18 @@ func InitSetup() {
 
 // createDir creates a directory at the given path if it doesn't exist.
 // It returns an error if the directory cannot be created or if there's an issue getting directory info.
-func createDir(logger *util.Logger, dirPath string) error {
+func createDir(dirPath string) error {
 	// Get directory info
-	fileInfo, err := os.Stat(dirPath)
+	_, err := os.Stat(dirPath)
 	if err != nil {
 		// Create dir if it doesn't exist
 		if os.IsNotExist(err) {
 			if err := os.Mkdir(dirPath, 0755); err != nil {
 				return &util.AppErr{Message: "error creating " + dirPath, Err: err}
 			}
-			logger.Debug("directory '%s' is created\n", dirPath)
 		} else {
 			return &util.AppErr{Message: "error getting info for " + dirPath, Err: err}
 		}
-	} else {
-		logger.Debug("%s directory already exists\n", fileInfo.Name())
 	}
 
 	return nil
@@ -149,6 +150,8 @@ func setupDefaultConfig(logger *util.Logger, config *Config) error {
 		return &util.AppErr{Message: "error marshalling config data", Err: err}
 	}
 
+	logger.Debug("updated default config data: %v", string(data))
+
 	// Write config data
 	logger.Info("writing config data to file")
 	_, err = file.Write(data)
@@ -162,6 +165,9 @@ func setupDefaultConfig(logger *util.Logger, config *Config) error {
 
 // updateDefaultConfig updates the fields of the provided Config struct with the default values.
 func updateDefaultConfig(baseAppPath string, config *Config) {
+	if config.AppPath == "" {
+		config.AppPath = baseAppPath
+	}
 	if config.BackupsPath == "" {
 		config.BackupsPath = baseAppPath + string(filepath.Separator) + backupsBaseDirname
 	}
