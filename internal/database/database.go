@@ -49,6 +49,7 @@ func (handler *DBHandler) createTable() error {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		src_path TEXT NOT NULL,
 		dst_path TEXT NOT NULL,
+		type VARCHAR(15) NOT NULL,
 		status VARCHAR(15) NOT NULL,
 		created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 	);`
@@ -62,10 +63,10 @@ func (handler *DBHandler) createTable() error {
 }
 
 // Insert inserts the given data into the backups table.
-func (handler *DBHandler) Insert(srcPath, dstPath string) error {
-	insertSQL := `INSERT INTO backups (src_path, dst_path, status) VALUES (?, ?, ?)`
+func (handler *DBHandler) Insert(srcPath, dstPath, fileType string) error {
+	insertSQL := `INSERT INTO backups (src_path, dst_path, type, status) VALUES (?, ?, ?, ?)`
 
-	_, err := handler.db.Exec(insertSQL, srcPath, dstPath, statusBackedUp)
+	_, err := handler.db.Exec(insertSQL, srcPath, dstPath, fileType, statusBackedUp)
 	if err != nil {
 		return err
 	}
