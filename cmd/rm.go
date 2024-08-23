@@ -43,14 +43,16 @@ func rmHandler() {
 
 		// Parse rm args
 		for ind := range args {
+			srcPath := args[ind]
+
 			// TODO: Parse rm flags
-			if strings.HasPrefix(args[ind], "-") {
-				fmt.Printf("rm: unrecognized option '%s'\n", args[ind])
+			if strings.HasPrefix(srcPath, "-") {
+				fmt.Printf("rm: unrecognized option '%s'\n", srcPath)
 				return
 			}
 
 			// Check file type
-			fi, err := os.Stat(args[ind])
+			fi, err := os.Stat(srcPath)
 			if err != nil {
 				fmt.Printf("error getting the file stat: %v\n", err)
 				return
@@ -63,29 +65,39 @@ func rmHandler() {
 				return
 			}
 
+			// Construct destination path
+			dstPath := filepath.Join(dirToMove, filepath.Base(srcPath))
+
+			fileType := TypeFile
+
 			// Check and backup files or directories
 			if fi.IsDir() {
-				// TODO: Backup dir
+				fileType = TypeDirectory
+
+				// Move directory to the timestamp dir
+				if err := util.MoveDirectory(srcPath, dstPath); err != nil {
+					fmt.Printf("error moving %s directory to backups dir: %v\n", srcPath, err)
+					return
+				}
 			} else {
 				// Move file to the timestamp dir
-				dstPath := dirToMove + string(filepath.Separator) + filepath.Base(args[ind])
-				if err := util.MoveFile(args[ind], dstPath); err != nil {
-					fmt.Printf("error moving %s to backups dir: %v\n", args[ind], err)
+				if err := util.MoveFile(srcPath, dstPath); err != nil {
+					fmt.Printf("error moving %s file to backups dir: %v\n", srcPath, err)
 					return
 				}
+			}
 
-				// Get absolute path
-				absPath, err := filepath.Abs(args[ind])
-				if err != nil {
-					fmt.Printf("error getting the absolute file path: %v\n", err)
-					return
-				}
+			// Get absolute path
+			absPath, err := filepath.Abs(srcPath)
+			if err != nil {
+				fmt.Printf("error getting the absolute path: %v\n", err)
+				return
+			}
 
-				// Track info in DB
-				if err := db.Insert(absPath, dstPath, TypeFile); err != nil {
-					fmt.Printf("error inserting file info in db: %v\n", err)
-					return
-				}
+			// Track info in DB
+			if err := db.Insert(absPath, dstPath, fileType); err != nil {
+				fmt.Printf("error inserting info in db: %v\n", err)
+				return
 			}
 		}
 	} else {
