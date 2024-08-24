@@ -1,18 +1,17 @@
 package util
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+)
 
-// AppErr is a custom error type that wraps an error message and the underlying error
-type AppErr struct {
-	Message string
-	Err     error
-}
-
-// Error implements the error interface for AppErr
-// It returns a formatted string containing the error message and the underlying error
-func (ae *AppErr) Error() string {
-	if ae.Err != nil {
-		return fmt.Sprintf("Error => Message: %s, Err: %v\n", ae.Message, ae.Err)
+// ExitOnError checks if an error occurred and exits the program with a non-zero status code.
+func ExitOnError(err error, msg string) {
+	if err != nil {
+		fmt.Printf("%s, err: %v\n", msg, err)
+	} else {
+		fmt.Println(msg)
 	}
-	return fmt.Sprintf("Error => Message: %s\n", ae.Message)
+
+	os.Exit(1)
 }

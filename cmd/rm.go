@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/alicse3/goundo/internal/config"
 	"github.com/alicse3/goundo/internal/database"
 	"github.com/alicse3/goundo/internal/util"
 )
@@ -27,9 +26,9 @@ func rmHandler() {
 	// Process if there are args
 	if len(args) > 0 {
 		// Get config
-		cfg, err := config.GetConfig()
-		if err != nil {
-			fmt.Printf("error getting the config data: %v\n", err)
+		cfg := getConfig()
+		if cfg == nil {
+			fmt.Println("error getting config")
 			return
 		}
 
