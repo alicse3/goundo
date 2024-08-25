@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"strings"
 )
@@ -10,7 +11,7 @@ import (
 func HandleCommands() {
 	// If there are no arguments, show the help message and exit
 	if len(os.Args) < 2 {
-		showHelp()
+		helpHandler()
 		return
 	}
 
@@ -28,7 +29,7 @@ func HandleCommands() {
 	case "rm":
 		rmHandler()
 	default:
-		println("Unknown command")
-		showHelp()
+		fmt.Println("Unknown command:", command)
+		helpHandler()
 	}
 }
