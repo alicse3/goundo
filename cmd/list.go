@@ -24,7 +24,7 @@ func listHandler() {
 	}
 
 	// Get backups from DB
-	backups, err := db.List()
+	backups, err := db.GetAll()
 	if err != nil {
 		fmt.Printf("error getting backups from the db: %v\n", err)
 		return

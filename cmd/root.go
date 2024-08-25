@@ -30,6 +30,8 @@ func HandleCommands() {
 		backupHandler()
 	case "list":
 		listHandler()
+	case "restore":
+		restoreHandler(strings.TrimSpace(os.Args[2]))
 	default:
 		fmt.Println("Unknown command:", command)
 		helpHandler()
