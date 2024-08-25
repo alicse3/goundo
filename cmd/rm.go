@@ -33,8 +33,7 @@ func rmHandler() {
 		}
 
 		// Initialize the DB
-		dbPath := cfg.AppPath + string(filepath.Separator) + "backups.db"
-		db, err := database.NewDBHandler(dbPath)
+		db, err := database.NewDBHandler(cfg.SqliteDBPath)
 		if err != nil {
 			fmt.Printf("error initializing the db: %v\n", err)
 			return

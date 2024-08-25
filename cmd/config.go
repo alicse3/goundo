@@ -20,6 +20,9 @@ const (
 
 	// defaultConfigFile is the name of the default configuration file.
 	defaultConfigFile = ".goundo_config.json"
+
+	// defaultSqliteDBFile is the name of the default Sqlite db file.
+	defaultSqliteDBFile = "backups.db"
 )
 
 // configHandler handle's the configuration initialization.
@@ -78,6 +81,9 @@ type configuration struct {
 
 	// ConfigFilepath is the path where the configuration file is stored.
 	ConfigFilepath string `json:"configFilepath"`
+
+	// SqliteDBPath is where the Sqlite database file is stored.
+	SqliteDBPath string `json:"sqliteDBPath"`
 }
 
 // initDefault initilizes and returns the default configuration.
@@ -86,12 +92,14 @@ func initDefault() *configuration {
 		AppPath:        getDefaultAppPath(),
 		BackupsPath:    filepath.Join(getDefaultAppPath(), defaultBackupsDir),
 		ConfigFilepath: getDefaultConfigPath(),
+		SqliteDBPath:   filepath.Join(getDefaultAppPath(), defaultSqliteDBFile),
 	}
 }
 
 // updateAppPathForAll updates the AppPath for all the paths that require it.
 func (cfg *configuration) updateAppPathForAll() {
 	cfg.BackupsPath = filepath.Join(cfg.AppPath, defaultBackupsDir)
+	cfg.SqliteDBPath = filepath.Join(cfg.AppPath, defaultSqliteDBFile)
 }
 
 // promptForUpdates prompts for config values update.
