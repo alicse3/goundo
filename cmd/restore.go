@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/alicse3/goundo/internal/database"
@@ -74,6 +75,11 @@ func restore(backup *database.Backup) error {
 		}
 	} else {
 		return errors.New("unknown type")
+	}
+
+	// Remove the backup(empty timestamp directory) path after restore
+	if err := os.RemoveAll(backup.BackupPath); err != nil {
+		return err
 	}
 
 	return nil

@@ -93,7 +93,7 @@ func backupHandler() {
 			}
 
 			// Track info in DB
-			if err := db.Insert(absPath, dstPath, fileType); err != nil {
+			if err := db.Insert(dirToMove, absPath, dstPath, fileType); err != nil {
 				fmt.Printf("error inserting info in db: %v\n", err)
 				return
 			}
