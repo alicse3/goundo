@@ -2,12 +2,14 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
-	statusBackedUp = "BACKED_UP"
+	StatusBackedUp = "BACKED_UP"
+	StatusRestored = "RESTORED"
 )
 
 // Backup is a struct which represents the backups table schema.
@@ -67,7 +69,7 @@ func (handler *DBHandler) createTable() error {
 func (handler *DBHandler) Insert(srcPath, dstPath, fileType string) error {
 	insertSQL := `INSERT INTO backups (src_path, dst_path, type, status) VALUES (?, ?, ?, ?)`
 
-	_, err := handler.db.Exec(insertSQL, srcPath, dstPath, fileType, statusBackedUp)
+	_, err := handler.db.Exec(insertSQL, srcPath, dstPath, fileType, StatusBackedUp)
 	if err != nil {
 		return err
 	}
@@ -75,8 +77,8 @@ func (handler *DBHandler) Insert(srcPath, dstPath, fileType string) error {
 	return nil
 }
 
-// List returns data from the backups table.
-func (handler *DBHandler) List() ([]Backup, error) {
+// GetAll returns data from the backups table.
+func (handler *DBHandler) GetAll() ([]Backup, error) {
 	selectSQL := `SELECT * FROM backups`
 
 	rows, err := handler.db.Query(selectSQL)
@@ -95,4 +97,33 @@ func (handler *DBHandler) List() ([]Backup, error) {
 	}
 
 	return backups, nil
+}
+
+// GetById returns data from the backups table by id.
+func (handler *DBHandler) GetById(backupId string) (*Backup, error) {
+	selectSQL := `SELECT * FROM backups WHERE id = ?`
+
+	var backup Backup
+	row := handler.db.QueryRow(selectSQL, backupId)
+	if err := row.Scan(&backup.ID, &backup.SrcPath, &backup.DstPath, &backup.Type, &backup.Status, &backup.CreatedAt); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.New("record not found")
+		}
+
+		return nil, err
+	}
+
+	return &backup, nil
+}
+
+// UpdateStatus updates the backups status.
+func (handler *DBHandler) UpdateStatus(id int, status string) error {
+	updateSQL := `UPDATE backups SET status = ? WHERE id = ?`
+
+	_, err := handler.db.Exec(updateSQL, status, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

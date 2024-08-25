@@ -105,7 +105,7 @@ func backupHandler() {
 
 // createDirWithTimestamp creates a directory with current timestamp
 func createDirWithTimestamp(backupsPath string) (dirToMove string, err error) {
-	dirToMove = backupsPath + string(filepath.Separator) + generateUniqueTimestamp()
+	dirToMove = filepath.Join(backupsPath, generateUniqueTimestamp())
 	if err = os.Mkdir(dirToMove, os.ModeDir|0755); err != nil {
 		return "", err
 	}
