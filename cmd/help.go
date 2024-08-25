@@ -9,7 +9,8 @@ const help = `usage: goundo <command> [arguments]
 	The most commonly used goundo commands are:
 		version     Show the app's version number
 		help        Show this help message
-		configure   Configure the app settings`
+		configure   Configure the app settings
+		list        Shows the backups information`
 
 // helpHandler handles the help command
 func helpHandler() {
