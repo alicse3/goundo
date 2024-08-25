@@ -75,3 +75,24 @@ func MoveDirectory(src string, dst string) error {
 
 	return nil
 }
+
+// CreateDir creates a directory at the given path if it doesn't exist.
+func CreateDir(path string) {
+	// Get directory info
+	_, err := os.Stat(path)
+	if err != nil {
+		// Create dir if it doesn't exist
+		if os.IsNotExist(err) {
+			if err := os.Mkdir(path, 0755); err != nil {
+				ExitOnError(err, "error creating "+path)
+			}
+		}
+	}
+}
+
+// WriteToFile creates a file if it doesn't exist and writes data to a file.
+func WriteToFile(path string, data string) {
+	if err := os.WriteFile(path, []byte(data), 0644); err != nil {
+		ExitOnError(err, "error writing data to a file "+path)
+	}
+}
