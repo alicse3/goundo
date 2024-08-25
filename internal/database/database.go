@@ -14,12 +14,13 @@ const (
 
 // Backup is a struct which represents the backups table schema.
 type Backup struct {
-	ID        int    `json:"id"`
-	SrcPath   string `json:"srcPath"`
-	DstPath   string `json:"dstPath"`
-	Type      string `json:"type"`
-	Status    string `json:"status"`
-	CreatedAt string `json:"createdAt"`
+	ID         int    `json:"id"`
+	BackupPath string `json:"backupPath"`
+	SrcPath    string `json:"srcPath"`
+	DstPath    string `json:"dstPath"`
+	Type       string `json:"type"`
+	Status     string `json:"status"`
+	CreatedAt  string `json:"createdAt"`
 }
 
 // DBHandler manages the SQLite database connection.
@@ -50,6 +51,7 @@ func (handler *DBHandler) createTable() error {
 	createTableSQL := `
 	CREATE TABLE IF NOT EXISTS backups (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		backup_path TEXT NOT NULL,
 		src_path TEXT NOT NULL,
 		dst_path TEXT NOT NULL,
 		type VARCHAR(15) NOT NULL,
@@ -66,10 +68,10 @@ func (handler *DBHandler) createTable() error {
 }
 
 // Insert inserts the given data into the backups table.
-func (handler *DBHandler) Insert(srcPath, dstPath, fileType string) error {
-	insertSQL := `INSERT INTO backups (src_path, dst_path, type, status) VALUES (?, ?, ?, ?)`
+func (handler *DBHandler) Insert(backupPath, srcPath, dstPath, fileType string) error {
+	insertSQL := `INSERT INTO backups (backup_path, src_path, dst_path, type, status) VALUES (?, ?, ?, ?, ?)`
 
-	_, err := handler.db.Exec(insertSQL, srcPath, dstPath, fileType, StatusBackedUp)
+	_, err := handler.db.Exec(insertSQL, backupPath, srcPath, dstPath, fileType, StatusBackedUp)
 	if err != nil {
 		return err
 	}
@@ -89,7 +91,7 @@ func (handler *DBHandler) GetAll() ([]Backup, error) {
 	var backups []Backup
 	for rows.Next() {
 		var backup Backup
-		if err := rows.Scan(&backup.ID, &backup.SrcPath, &backup.DstPath, &backup.Type, &backup.Status, &backup.CreatedAt); err != nil {
+		if err := rows.Scan(&backup.ID, &backup.BackupPath, &backup.SrcPath, &backup.DstPath, &backup.Type, &backup.Status, &backup.CreatedAt); err != nil {
 			return nil, err
 		}
 
@@ -105,7 +107,7 @@ func (handler *DBHandler) GetById(backupId string) (*Backup, error) {
 
 	var backup Backup
 	row := handler.db.QueryRow(selectSQL, backupId)
-	if err := row.Scan(&backup.ID, &backup.SrcPath, &backup.DstPath, &backup.Type, &backup.Status, &backup.CreatedAt); err != nil {
+	if err := row.Scan(&backup.ID, &backup.BackupPath, &backup.SrcPath, &backup.DstPath, &backup.Type, &backup.Status, &backup.CreatedAt); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, errors.New("record not found")
 		}
