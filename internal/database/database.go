@@ -12,11 +12,12 @@ const (
 
 // Backup is a struct which represents the backups table schema.
 type Backup struct {
-	ID        int
-	SrcPath   string
-	DstPath   string
-	Status    string
-	CreatedAt string
+	ID        int    `json:"id"`
+	SrcPath   string `json:"srcPath"`
+	DstPath   string `json:"dstPath"`
+	Type      string `json:"type"`
+	Status    string `json:"status"`
+	CreatedAt string `json:"createdAt"`
 }
 
 // DBHandler manages the SQLite database connection.
@@ -74,8 +75,8 @@ func (handler *DBHandler) Insert(srcPath, dstPath, fileType string) error {
 	return nil
 }
 
-// GetAll returns data from the backups table.
-func (handler *DBHandler) GetAll() ([]Backup, error) {
+// List returns data from the backups table.
+func (handler *DBHandler) List() ([]Backup, error) {
 	selectSQL := `SELECT * FROM backups`
 
 	rows, err := handler.db.Query(selectSQL)
@@ -86,7 +87,7 @@ func (handler *DBHandler) GetAll() ([]Backup, error) {
 	var backups []Backup
 	for rows.Next() {
 		var backup Backup
-		if err := rows.Scan(&backup.ID, &backup.SrcPath, &backup.DstPath, &backup.Status, &backup.CreatedAt); err != nil {
+		if err := rows.Scan(&backup.ID, &backup.SrcPath, &backup.DstPath, &backup.Type, &backup.Status, &backup.CreatedAt); err != nil {
 			return nil, err
 		}
 

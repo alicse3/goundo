@@ -27,7 +27,9 @@ func HandleCommands() {
 	case "help":
 		helpHandler()
 	case "rm":
-		rmHandler()
+		backupHandler()
+	case "list":
+		listHandler()
 	default:
 		fmt.Println("Unknown command:", command)
 		helpHandler()

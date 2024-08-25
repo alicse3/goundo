@@ -18,8 +18,8 @@ const (
 	TypeDirectory = "DIRECTORY"
 )
 
-// rmHandler handles the rm commands.
-func rmHandler() {
+// backupHandler handles the rm command to backup files/directories.
+func backupHandler() {
 	// Get rm args
 	args := os.Args[2:]
 
@@ -99,7 +99,7 @@ func rmHandler() {
 			}
 		}
 	} else {
-		println("rm: missing operand")
+		fmt.Println("rm: missing arguments")
 	}
 }
 
